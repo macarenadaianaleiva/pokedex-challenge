@@ -24,7 +24,7 @@ npm test         # suite de Jest
 | Persistencia de la última lista cargada | ✅ | `PersistQueryClientProvider` en `App.tsx` |
 | Skeletons / loaders | ✅ | `components/PokemonCardSkeleton.tsx`, `ActivityIndicator` |
 | Mensajes de error específicos (vacío / sin resultados) | ✅ | `components/EmptyState.tsx`, `components/ErrorState.tsx` |
-| Testing (opcional) | ✅ | 31 tests, `npm test` |
+| Testing (opcional) | ✅ | 34 tests, `npm test` |
 | Expo SDK 54 | ✅ | `package.json` |
 | Axios | ✅ | `api/client.ts` |
 | Compound Pattern | ✅ | `components/PokemonCard/`, `components/Section.tsx` |
@@ -72,11 +72,12 @@ src/
 
 ## Testing
 
-`npm test` — 31 tests con `jest-expo` + `@testing-library/react-native`, priorizando lógica de negocio sobre integración de pantallas completas:
+`npm test` — 34 tests con `jest-expo` + `@testing-library/react-native`, priorizando lógica de negocio sobre integración de pantallas completas:
 
 - `utils/__tests__/pokemon.test.ts` — funciones puras
 - `store/__tests__/favoritesStore.test.ts` — favoritos, incluida la idempotencia de `removeFavorite`
 - `lib/__tests__/queryClient.test.ts` — clasificación de errores y política de retry
 - `hooks/__tests__/useNetworkStatus.test.ts` — cambios de conectividad, incluido el caso `isInternetReachable: null`
 - `components/PokemonCard/__tests__/PokemonCard.test.tsx` — favoritear desde la lista (fetch bajo demanda, manejo de error, comportamiento sin conexión)
+- `components/__tests__/ErrorState.test.tsx` — el botón de reintentar desaparece (en vez de quedar "muerto") cuando no hay conexión
 - `components/__tests__/EmptyState.test.tsx` — ejemplo de test de componente
