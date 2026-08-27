@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { Alert } from 'react-native';
 import { fetchPokemonDetail } from '../api/pokemon';
 import type { FavoritePokemon } from '../api/types';
 import { queryClient } from '../lib/queryClient';
@@ -13,19 +14,21 @@ interface CardSnapshot {
 
 export function useFavoriteToggle(pokemon: CardSnapshot) {
   const isFavorite = useFavoritesStore((s) => s.isFavorite(pokemon.id));
-  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
+  const removeFavorite = useFavoritesStore((s) => s.removeFavorite);
+  const addFavorite = useFavoritesStore((s) => s.toggleFavorite);
   const [pending, setPending] = useState(false);
 
   const toggle = useCallback(async () => {
-    // Quitar favorito no necesita red: ya tenemos todo lo que hace falta.
+    // removeFavorite (no toggleFavorite) porque es idempotente: quitar
+    // con toggleFavorite y un doble-tap rápido podía re-agregar el
+    // favorito con datos a medias (types: [], imagen chica).
     if (isFavorite) {
-      toggleFavorite({ id: pokemon.id, name: pokemon.name, image: pokemon.image, types: [] });
+      removeFavorite(pokemon.id);
       return;
     }
 
-    // Agregar SÍ necesita los tipos, y la card de listado no los trae
-    // (para no disparar 20 requests por página). Se pide el detalle una
-    // única vez, bajo demanda, y queda cacheado en React Query.
+    // La card de listado no trae tipos (evita N+1), así que hace falta
+    // el detalle. Se pide bajo demanda y queda cacheado en React Query.
     setPending(true);
     try {
       const detail = await queryClient.fetchQuery({
@@ -38,14 +41,16 @@ export function useFavoriteToggle(pokemon: CardSnapshot) {
         image: getBestArtwork(detail) || pokemon.image,
         types: detail.types.map((t) => t.type.name),
       };
-      toggleFavorite(favorite);
+      addFavorite(favorite);
     } catch {
-      // Fallo de red al favoritear: el usuario puede reintentar tocando
-      // la estrella de nuevo.
+      Alert.alert(
+        'No se pudo agregar a favoritos',
+        'Revisá tu conexión e intentá de nuevo.'
+      );
     } finally {
       setPending(false);
     }
-  }, [isFavorite, pokemon.id, pokemon.name, pokemon.image, toggleFavorite]);
+  }, [isFavorite, pokemon.id, pokemon.name, pokemon.image, removeFavorite, addFavorite]);
 
   return { isFavorite, pending, toggle };
 }

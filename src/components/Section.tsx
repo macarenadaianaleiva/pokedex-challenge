@@ -20,6 +20,8 @@ export const Section = Object.assign(Root, { Title, Body });
 const styles = StyleSheet.create({
   section: {
     marginTop: 20,
+    // Centralizado acá para que título y contenido queden siempre alineados.
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 16,

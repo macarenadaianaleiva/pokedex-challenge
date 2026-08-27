@@ -64,7 +64,9 @@ function FavoriteToggle({ style }: { style?: StyleProp<ViewStyle> }) {
   const { isFavorite, pending, toggle } = useFavoriteToggle({ id, name, image });
 
   return (
-    <View style={style}>
+    // Posición por defecto, pisable por el caller vía `style`. Antes
+    // cada screen repetía este mismo estilo a mano.
+    <View style={[styles.favoriteDefaultPosition, style]}>
       <FavoriteHeartButton isFavorite={isFavorite} pending={pending} onPress={toggle} />
     </View>
   );
@@ -105,5 +107,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1C1C1E',
     marginTop: 2,
+  },
+  favoriteDefaultPosition: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 1,
   },
 });
