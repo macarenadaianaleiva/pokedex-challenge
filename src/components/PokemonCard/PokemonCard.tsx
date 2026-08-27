@@ -82,14 +82,10 @@ export const PokemonCard = Object.assign(Root, {
   FavoriteToggle,
 });
 
-// Altura fija (no minHeight): así cada fila del FlatList mide siempre
-// lo mismo y getItemLayout (ver HomeScreen/FavoritesScreen) puede saber
-// la posición de cada item sin que VirtualizedList tenga que medirlos
-// uno por uno — eso era lo que generaba el warning de VirtualizedList
-// al filtrar de golpe muchos resultados de búsqueda.
+// Altura fija (no minHeight): evita que un nombre largo estire la card y
+// rompa la alineación de la grilla.
 export const CARD_HEIGHT = 170;
 export const CARD_MARGIN = 6;
-export const CARD_ROW_HEIGHT = CARD_HEIGHT + CARD_MARGIN * 2;
 
 const styles = StyleSheet.create({
   card: {
