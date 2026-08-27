@@ -56,7 +56,11 @@ function CardId() {
 
 function CardName({ style }: { style?: StyleProp<ViewStyle> }) {
   const { name } = usePokemonCardContext();
-  return <Text style={[styles.name, style]}>{capitalize(name)}</Text>;
+  return (
+    <Text style={[styles.name, style]} numberOfLines={1} ellipsizeMode="tail">
+      {capitalize(name)}
+    </Text>
+  );
 }
 
 function FavoriteToggle({ style }: { style?: StyleProp<ViewStyle> }) {
@@ -64,8 +68,7 @@ function FavoriteToggle({ style }: { style?: StyleProp<ViewStyle> }) {
   const { isFavorite, pending, toggle } = useFavoriteToggle({ id, name, image });
 
   return (
-    // Posición por defecto, pisable por el caller vía `style`. Antes
-    // cada screen repetía este mismo estilo a mano.
+    // Posición por defecto, pisable por el caller vía `style`.
     <View style={[styles.favoriteDefaultPosition, style]}>
       <FavoriteHeartButton isFavorite={isFavorite} pending={pending} onPress={toggle} />
     </View>
@@ -79,14 +82,23 @@ export const PokemonCard = Object.assign(Root, {
   FavoriteToggle,
 });
 
+// Altura fija (no minHeight): así cada fila del FlatList mide siempre
+// lo mismo y getItemLayout (ver HomeScreen/FavoritesScreen) puede saber
+// la posición de cada item sin que VirtualizedList tenga que medirlos
+// uno por uno — eso era lo que generaba el warning de VirtualizedList
+// al filtrar de golpe muchos resultados de búsqueda.
+export const CARD_HEIGHT = 170;
+export const CARD_MARGIN = 6;
+export const CARD_ROW_HEIGHT = CARD_HEIGHT + CARD_MARGIN * 2;
+
 const styles = StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: '#F4F5F7',
     borderRadius: 16,
     padding: 12,
-    margin: 6,
-    minHeight: 170,
+    margin: CARD_MARGIN,
+    height: CARD_HEIGHT,
   },
   pressed: {
     opacity: 0.7,

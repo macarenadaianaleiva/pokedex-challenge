@@ -5,11 +5,17 @@ import { FlatList, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { FavoritePokemon } from '../api/types';
 import { EmptyState } from '../components/EmptyState';
-import { PokemonCard } from '../components/PokemonCard';
+import { CARD_ROW_HEIGHT, PokemonCard } from '../components/PokemonCard';
 import type { RootStackParamList } from '../navigation/types';
 import { useFavoritesStore } from '../store/favoritesStore';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+const NUM_COLUMNS = 2;
+
+function getItemLayout(_: unknown, index: number) {
+  const row = Math.floor(index / NUM_COLUMNS);
+  return { length: CARD_ROW_HEIGHT, offset: CARD_ROW_HEIGHT * row, index };
+}
 
 // A diferencia de Home, no usa React Query: lee directo del store de
 // Zustand (persistido en AsyncStorage) — funciona offline sin depender
@@ -57,7 +63,8 @@ export function FavoritesScreen() {
         <FlatList
           data={favorites}
           keyExtractor={(item) => String(item.id)}
-          numColumns={2}
+          numColumns={NUM_COLUMNS}
+          getItemLayout={getItemLayout}
           contentContainerStyle={styles.listContent}
           renderItem={renderItem}
         />

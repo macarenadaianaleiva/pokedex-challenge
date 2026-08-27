@@ -1,1 +1,1 @@
-export { PokemonCard } from './PokemonCard';
+export { CARD_ROW_HEIGHT, PokemonCard } from './PokemonCard';
