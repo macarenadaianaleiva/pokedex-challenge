@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { onlineManager } from '@tanstack/react-query';
 import { Alert } from 'react-native';
 import type { PokemonDetail } from '../../../api/types';
 import { fetchPokemonDetail } from '../../../api/pokemon';
@@ -96,5 +97,20 @@ describe('PokemonCard.FavoriteToggle', () => {
 
     expect(useFavoritesStore.getState().isFavorite(25)).toBe(false);
     expect(useFavoritesStore.getState().favorites[25]).toBeUndefined();
+  });
+
+  it('sin conexión y sin caché previa, avisa con Alert en vez de quedarse colgado', async () => {
+    onlineManager.setOnline(false);
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    mockedFetchDetail.mockRejectedValue(new Error('Network Error'));
+
+    renderFavoriteToggle();
+    fireEvent.press(screen.getByLabelText('Agregar a favoritos'));
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    alertSpy.mockRestore();
+    onlineManager.setOnline(true);
+
+    expect(useFavoritesStore.getState().isFavorite(25)).toBe(false);
   });
 });
