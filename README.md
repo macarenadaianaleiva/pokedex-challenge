@@ -24,7 +24,7 @@ npm test         # suite de Jest
 | Persistencia de la última lista cargada | ✅ | `PersistQueryClientProvider` en `App.tsx` |
 | Skeletons / loaders | ✅ | `components/PokemonCardSkeleton.tsx`, `ActivityIndicator` |
 | Mensajes de error específicos (vacío / sin resultados) | ✅ | `components/EmptyState.tsx`, `components/ErrorState.tsx` |
-| Testing (opcional) | ✅ | 26 tests, `npm test` |
+| Testing (opcional) | ✅ | 31 tests, `npm test` |
 | Expo SDK 54 | ✅ | `package.json` |
 | Axios | ✅ | `api/client.ts` |
 | Compound Pattern | ✅ | `components/PokemonCard/`, `components/Section.tsx` |
@@ -40,13 +40,14 @@ npm test         # suite de Jest
 | Server state | TanStack React Query v5 | Cache, reintentos, paginación e infraestructura offline |
 | Client state | Zustand + `persist` | Favoritos: es decisión del usuario, no una respuesta de red |
 | Imágenes | expo-image | Placeholder + transición + cache a disco |
+| Conectividad | `@react-native-community/netinfo` | Conectado al `onlineManager` de React Query (patrón oficial para RN): pausa reintentos sin red en vez de fallar en loop |
 
 ## Estructura
 
 ```
 src/
   api/          axios client, fetchers y tipos de PokeAPI
-  hooks/        usePokemonList, usePokemonDetail, usePokemonIndex, useFavoriteToggle, useDebouncedValue
+  hooks/        usePokemonList, usePokemonDetail, usePokemonIndex, useFavoriteToggle, useDebouncedValue, useNetworkStatus
   store/        favoritesStore (zustand + persist)
   lib/          queryClient + persister offline
   components/   PokemonCard/ y Section (compound), + piezas chicas
@@ -63,7 +64,7 @@ src/
 
 **Favoritos con snapshot propio.** `favoritesStore` no guarda solo el id — guarda `{id, name, image, types}` para poder pintar Favoritos 100% offline sin depender del cache de red. Al agregar desde la lista (donde no hay tipos, ver arriba), `useFavoriteToggle` pide el detalle una vez bajo demanda; al quitar usa `removeFavorite` (idempotente) y no `toggleFavorite`, para no arriesgar una corrupción de datos si el usuario toca dos veces rápido.
 
-**Offline real, no solo "no crashea".** El cache de React Query se persiste en AsyncStorage con `maxAge: Infinity` (el default de la librería es 24hs y descartaría todo el cache junto, incluido el índice de búsqueda). Favoritos vive en su propio store persistido, independiente de React Query.
+**Offline real, no solo "no crashea".** El cache de React Query se persiste en AsyncStorage con `maxAge: Infinity` (el default de la librería es 24hs y descartaría todo el cache junto, incluido el índice de búsqueda). Favoritos vive en su propio store persistido, independiente de React Query. Un `OfflineBanner` avisa explícitamente cuando no hay red (antes la app solo lo inferría si un fetch fallaba), usando `useNetworkStatus` sobre NetInfo.
 
 **Compound Pattern** en dos componentes: `PokemonCard` (`.Image`, `.Id`, `.Name`, `.FavoriteToggle`, compartiendo datos por Context) y `Section` (`.Title`, `.Body`, usado en las 4 secciones del detalle).
 
@@ -71,10 +72,11 @@ src/
 
 ## Testing
 
-`npm test` — 26 tests con `jest-expo` + `@testing-library/react-native`, priorizando lógica de negocio sobre integración de pantallas completas:
+`npm test` — 31 tests con `jest-expo` + `@testing-library/react-native`, priorizando lógica de negocio sobre integración de pantallas completas:
 
 - `utils/__tests__/pokemon.test.ts` — funciones puras
 - `store/__tests__/favoritesStore.test.ts` — favoritos, incluida la idempotencia de `removeFavorite`
 - `lib/__tests__/queryClient.test.ts` — clasificación de errores y política de retry
-- `components/PokemonCard/__tests__/PokemonCard.test.tsx` — favoritear desde la lista (fetch bajo demanda, manejo de error)
+- `hooks/__tests__/useNetworkStatus.test.ts` — cambios de conectividad, incluido el caso `isInternetReachable: null`
+- `components/PokemonCard/__tests__/PokemonCard.test.tsx` — favoritear desde la lista (fetch bajo demanda, manejo de error, comportamiento sin conexión)
 - `components/__tests__/EmptyState.test.tsx` — ejemplo de test de componente
