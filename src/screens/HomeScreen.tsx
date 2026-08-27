@@ -1,12 +1,15 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { PokemonCard } from '../components/PokemonCard';
 import { PokemonCardSkeleton } from '../components/PokemonCardSkeleton';
+import { SearchBar } from '../components/SearchBar';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import { usePokemonIndex } from '../hooks/usePokemonIndex';
 import { usePokemonList } from '../hooks/usePokemonList';
 import type { RootStackParamList } from '../navigation/types';
 import { getArtworkForListItem } from '../utils/pokemon';
@@ -21,9 +24,14 @@ interface Row {
 
 export function HomeScreen() {
   const navigation = useNavigation<Nav>();
-  const list = usePokemonList();
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search.trim().toLowerCase(), 250);
+  const isSearching = debouncedSearch.length > 0;
 
-  const rows: Row[] = useMemo(
+  const list = usePokemonList();
+  const index = usePokemonIndex();
+
+  const listRows: Row[] = useMemo(
     () =>
       (list.data?.pages.flatMap((page) => page.results) ?? []).map((item) => {
         const { id, image } = getArtworkForListItem(item);
@@ -31,6 +39,18 @@ export function HomeScreen() {
       }),
     [list.data]
   );
+
+  const searchRows: Row[] = useMemo(() => {
+    if (!isSearching || !index.data) return [];
+    return index.data.results
+      .filter((item) => item.name.includes(debouncedSearch))
+      .map((item) => {
+        const { id, image } = getArtworkForListItem(item);
+        return { id, name: item.name, image };
+      });
+  }, [isSearching, index.data, debouncedSearch]);
+
+  const rows = isSearching ? searchRows : listRows;
 
   const goToDetail = useCallback(
     (row: Row) => navigation.navigate('Detail', { id: row.id, name: row.name }),
@@ -54,22 +74,37 @@ export function HomeScreen() {
   );
 
   const handleEndReached = useCallback(() => {
-    if (list.hasNextPage && !list.isFetchingNextPage) {
+    if (!isSearching && list.hasNextPage && !list.isFetchingNextPage) {
       list.fetchNextPage();
     }
-  }, [list.hasNextPage, list.isFetchingNextPage, list.fetchNextPage]);
+  }, [isSearching, list.hasNextPage, list.isFetchingNextPage, list.fetchNextPage]);
 
   const renderContent = () => {
-    if (list.isLoading) {
+    if (isSearching && index.isLoading) {
+      return <SkeletonGrid />;
+    }
+    if (isSearching && index.isError) {
       return (
-        <View style={styles.skeletonGrid}>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <PokemonCardSkeleton key={i} />
-          ))}
-        </View>
+        <ErrorState
+          message="No se pudo cargar el índice para buscar. Revisá tu conexión."
+          onRetry={() => index.refetch()}
+        />
       );
     }
-    if (list.isError) {
+    if (isSearching && rows.length === 0) {
+      return (
+        <EmptyState
+          icon="search-outline"
+          title={`Sin resultados para "${search.trim()}"`}
+          subtitle="Probá con otro nombre."
+        />
+      );
+    }
+
+    if (!isSearching && list.isLoading) {
+      return <SkeletonGrid />;
+    }
+    if (!isSearching && list.isError) {
       return (
         <ErrorState
           message="No se pudo cargar la lista de Pokémon. Revisá tu conexión."
@@ -77,7 +112,7 @@ export function HomeScreen() {
         />
       );
     }
-    if (rows.length === 0) {
+    if (!isSearching && rows.length === 0) {
       return (
         <EmptyState icon="alert-circle-outline" title="La lista está vacía." />
       );
@@ -93,7 +128,7 @@ export function HomeScreen() {
         onEndReachedThreshold={0.5}
         onEndReached={handleEndReached}
         ListFooterComponent={
-          list.isFetchingNextPage ? (
+          !isSearching && list.isFetchingNextPage ? (
             <ActivityIndicator style={styles.footerLoader} />
           ) : null
         }
@@ -103,8 +138,19 @@ export function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      <SearchBar value={search} onChangeText={setSearch} />
       {renderContent()}
     </SafeAreaView>
+  );
+}
+
+function SkeletonGrid() {
+  return (
+    <View style={styles.skeletonGrid}>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <PokemonCardSkeleton key={i} />
+      ))}
+    </View>
   );
 }
 
