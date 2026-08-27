@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
+import { CARD_HEIGHT, CARD_MARGIN } from './PokemonCard/PokemonCard';
 
 // Shimmer con la misma altura de la card real: evita el salto de layout
 // cuando llegan los datos.
@@ -40,8 +41,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F4F5F7',
     borderRadius: 16,
     padding: 12,
-    margin: 6,
-    minHeight: 170,
+    margin: CARD_MARGIN,
+    height: CARD_HEIGHT,
   },
   image: {
     width: '100%',
