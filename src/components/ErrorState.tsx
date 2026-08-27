@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 
 interface Props {
   message?: string;
@@ -10,11 +11,23 @@ export function ErrorState({
   message = 'Ocurrió un error. Intentá de nuevo.',
   onRetry,
 }: Props) {
+  const { isOnline } = useNetworkStatus();
+
+  // Con NetInfo conectado al onlineManager de React Query, un pedido
+  // hecho mientras no hay red queda "pausado" en vez de fallar — así
+  // que "Reintentar" no dispara ningún cambio visible hasta que vuelva
+  // la conexión. En vez de un botón que parece no hacer nada, se
+  // reemplaza por un mensaje explícito y se saca el botón mientras
+  // estemos offline.
+  const effectiveMessage = isOnline
+    ? message
+    : 'Estás sin conexión. Conectate para reintentar.';
+
   return (
     <View style={styles.container}>
       <Ionicons name="cloud-offline-outline" size={40} color="#9AA0A6" />
-      <Text style={styles.message}>{message}</Text>
-      {onRetry && (
+      <Text style={styles.message}>{effectiveMessage}</Text>
+      {isOnline && onRetry && (
         <Pressable style={styles.button} onPress={onRetry}>
           <Text style={styles.buttonText}>Reintentar</Text>
         </Pressable>
