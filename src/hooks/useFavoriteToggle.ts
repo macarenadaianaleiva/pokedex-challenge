@@ -34,6 +34,7 @@ export function useFavoriteToggle(pokemon: CardSnapshot) {
       const detail = await queryClient.fetchQuery({
         queryKey: ['pokemonDetail', pokemon.name],
         queryFn: () => fetchPokemonDetail(pokemon.name),
+        networkMode: 'always',
       });
       const favorite: FavoritePokemon = {
         id: detail.id,
