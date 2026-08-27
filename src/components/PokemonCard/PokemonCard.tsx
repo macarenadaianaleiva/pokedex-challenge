@@ -1,7 +1,9 @@
 import { Image, type ImageStyle } from 'expo-image';
 import { useMemo } from 'react';
-import { Pressable, StyleProp, StyleSheet, Text, ViewStyle } from 'react-native';
+import { Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { useFavoriteToggle } from '../../hooks/useFavoriteToggle';
 import { ARTWORK_BLURHASH, capitalize, formatPokedexId } from '../../utils/pokemon';
+import { FavoriteHeartButton } from '../FavoriteHeartButton';
 import { PokemonCardContext, usePokemonCardContext } from './PokemonCardContext';
 
 // Compound Pattern: Root comparte id/name/image por Context, y los
@@ -57,10 +59,22 @@ function CardName({ style }: { style?: StyleProp<ViewStyle> }) {
   return <Text style={[styles.name, style]}>{capitalize(name)}</Text>;
 }
 
+function FavoriteToggle({ style }: { style?: StyleProp<ViewStyle> }) {
+  const { id, name, image } = usePokemonCardContext();
+  const { isFavorite, pending, toggle } = useFavoriteToggle({ id, name, image });
+
+  return (
+    <View style={style}>
+      <FavoriteHeartButton isFavorite={isFavorite} pending={pending} onPress={toggle} />
+    </View>
+  );
+}
+
 export const PokemonCard = Object.assign(Root, {
   Image: CardImage,
   Id: CardId,
   Name: CardName,
+  FavoriteToggle,
 });
 
 const styles = StyleSheet.create({

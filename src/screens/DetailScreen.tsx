@@ -4,11 +4,13 @@ import { Image } from 'expo-image';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ErrorState } from '../components/ErrorState';
+import { FavoriteHeartButton } from '../components/FavoriteHeartButton';
 import { Section } from '../components/Section';
 import { StatBar } from '../components/StatBar';
 import { TypeBadge } from '../components/TypeBadge';
 import { usePokemonDetail } from '../hooks/usePokemonDetail';
 import type { RootStackParamList } from '../navigation/types';
+import { useFavoritesStore } from '../store/favoritesStore';
 import {
   ARTWORK_BLURHASH,
   capitalize,
@@ -24,6 +26,11 @@ type DetailRoute = RouteProp<RootStackParamList, 'Detail'>;
 export function DetailScreen() {
   const { params } = useRoute<DetailRoute>();
   const { data, isLoading, isError, refetch } = usePokemonDetail(params.name);
+
+  const isFavorite = useFavoritesStore((s) =>
+    data ? s.isFavorite(data.id) : false
+  );
+  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
 
   if (isLoading) {
     return (
@@ -52,6 +59,20 @@ export function DetailScreen() {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={[styles.hero, { backgroundColor: `${accentColor}22` }]}>
+          <View style={styles.favoriteFloating}>
+            <FavoriteHeartButton
+              isFavorite={isFavorite}
+              size={26}
+              onPress={() =>
+                toggleFavorite({
+                  id: data.id,
+                  name: data.name,
+                  image: getBestArtwork(data),
+                  types: data.types.map((t) => t.type.name),
+                })
+              }
+            />
+          </View>
           <Image
             source={{ uri: getBestArtwork(data) }}
             style={styles.heroImage}
@@ -146,6 +167,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: 12,
     paddingBottom: 24,
+    position: 'relative',
+  },
+  favoriteFloating: {
+    position: 'absolute',
+    top: 8,
+    right: 16,
+    zIndex: 1,
   },
   heroImage: {
     width: 180,

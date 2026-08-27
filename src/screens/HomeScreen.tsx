@@ -65,6 +65,7 @@ export function HomeScreen() {
         image={item.image}
         onPress={() => goToDetail(item)}
       >
+        <PokemonCard.FavoriteToggle style={styles.favoriteCorner} />
         <PokemonCard.Image />
         <PokemonCard.Id />
         <PokemonCard.Name />
@@ -162,6 +163,12 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 10,
     paddingBottom: 24,
+  },
+  favoriteCorner: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 1,
   },
   footerLoader: {
     marginVertical: 20,
