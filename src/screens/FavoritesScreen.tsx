@@ -30,9 +30,9 @@ export function FavoritesScreen() {
         id={item.id}
         name={item.name}
         image={item.image}
-        onPress={() => navigation.navigate('Detail', { id: item.id, name: item.name })}
+        onPress={() => navigation.navigate('Detail', { name: item.name })}
       >
-        <PokemonCard.FavoriteToggle style={styles.favoriteCorner} />
+        <PokemonCard.FavoriteToggle />
         <PokemonCard.Image />
         <PokemonCard.Id />
         <PokemonCard.Name />
@@ -74,11 +74,5 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 10,
     paddingBottom: 24,
-  },
-  favoriteCorner: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    zIndex: 1,
   },
 });

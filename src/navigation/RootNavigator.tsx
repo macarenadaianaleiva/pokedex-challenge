@@ -7,7 +7,13 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        // 'minimal': solo la flechita en el back button de iOS, sin
+        // texto (por defecto mostraba "Tabs", el nombre de la ruta).
+        headerBackButtonDisplayMode: 'minimal',
+      }}
+    >
       <Stack.Screen
         name="Tabs"
         component={TabNavigator}

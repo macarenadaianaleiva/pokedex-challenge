@@ -48,4 +48,17 @@ describe('favoritesStore', () => {
   it('isFavorite devuelve false para un id que nunca se agregó', () => {
     expect(useFavoritesStore.getState().isFavorite(999)).toBe(false);
   });
+
+  it('removeFavorite es idempotente: llamarlo varias veces seguidas no re-agrega nada', () => {
+    // A diferencia de toggleFavorite, que decide agregar/quitar según
+    // el estado actual — llamarlo dos veces seguidas re-agrega.
+    useFavoritesStore.getState().toggleFavorite(pikachu);
+
+    useFavoritesStore.getState().removeFavorite(25);
+    useFavoritesStore.getState().removeFavorite(25);
+    useFavoritesStore.getState().removeFavorite(25);
+
+    expect(useFavoritesStore.getState().isFavorite(25)).toBe(false);
+    expect(useFavoritesStore.getState().favorites[25]).toBeUndefined();
+  });
 });

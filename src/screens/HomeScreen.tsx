@@ -28,8 +28,16 @@ export function HomeScreen() {
   const debouncedSearch = useDebouncedValue(search.trim().toLowerCase(), 250);
   const isSearching = debouncedSearch.length > 0;
 
+  // El índice (~1300 nombres) se activa recién la primera vez que se
+  // escribe algo, no al montar Home (ver usePokemonIndex).
+  const [hasSearchedOnce, setHasSearchedOnce] = useState(false);
+  const handleSearchChange = useCallback((text: string) => {
+    setSearch(text);
+    if (text.trim().length > 0) setHasSearchedOnce(true);
+  }, []);
+
   const list = usePokemonList();
-  const index = usePokemonIndex();
+  const index = usePokemonIndex(hasSearchedOnce);
 
   const listRows: Row[] = useMemo(
     () =>
@@ -53,7 +61,7 @@ export function HomeScreen() {
   const rows = isSearching ? searchRows : listRows;
 
   const goToDetail = useCallback(
-    (row: Row) => navigation.navigate('Detail', { id: row.id, name: row.name }),
+    (row: Row) => navigation.navigate('Detail', { name: row.name }),
     [navigation]
   );
 
@@ -65,7 +73,7 @@ export function HomeScreen() {
         image={item.image}
         onPress={() => goToDetail(item)}
       >
-        <PokemonCard.FavoriteToggle style={styles.favoriteCorner} />
+        <PokemonCard.FavoriteToggle />
         <PokemonCard.Image />
         <PokemonCard.Id />
         <PokemonCard.Name />
@@ -96,7 +104,8 @@ export function HomeScreen() {
       return (
         <EmptyState
           icon="search-outline"
-          title={`Sin resultados para "${search.trim()}"`}
+          // debouncedSearch, no `search`: es lo que realmente se filtró.
+          title={`Sin resultados para "${debouncedSearch}"`}
           subtitle="Probá con otro nombre."
         />
       );
@@ -139,7 +148,7 @@ export function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <SearchBar value={search} onChangeText={setSearch} />
+      <SearchBar value={search} onChangeText={handleSearchChange} />
       {renderContent()}
     </SafeAreaView>
   );
@@ -163,12 +172,6 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 10,
     paddingBottom: 24,
-  },
-  favoriteCorner: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    zIndex: 1,
   },
   footerLoader: {
     marginVertical: 20,

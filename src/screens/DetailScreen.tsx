@@ -9,6 +9,7 @@ import { Section } from '../components/Section';
 import { StatBar } from '../components/StatBar';
 import { TypeBadge } from '../components/TypeBadge';
 import { usePokemonDetail } from '../hooks/usePokemonDetail';
+import { isNotFoundError } from '../lib/queryClient';
 import type { RootStackParamList } from '../navigation/types';
 import { useFavoritesStore } from '../store/favoritesStore';
 import {
@@ -25,7 +26,13 @@ type DetailRoute = RouteProp<RootStackParamList, 'Detail'>;
 
 export function DetailScreen() {
   const { params } = useRoute<DetailRoute>();
-  const { data, isLoading, isError, refetch } = usePokemonDetail(params.name);
+  const { data, isLoading, isError, error, refetch } = usePokemonDetail(
+    params.name
+  );
+  // 404 real ("este Pokémon no existe") vs. cualquier otro fallo (sin
+  // conexión, timeout, 500 de PokeAPI): mensajes distintos, y solo el
+  // segundo caso ofrece reintentar.
+  const isNotFound = isNotFoundError(error);
 
   const isFavorite = useFavoritesStore((s) =>
     data ? s.isFavorite(data.id) : false
@@ -46,8 +53,12 @@ export function DetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <ErrorState
-          message="No se pudo cargar este Pokémon. Revisá tu conexión."
-          onRetry={() => refetch()}
+          message={
+            isNotFound
+              ? 'Este Pokémon no existe.'
+              : 'No se pudo cargar este Pokémon. Si estás sin conexión, probá abrirlo cuando ya lo hayas visto una vez online.'
+          }
+          onRetry={isNotFound ? undefined : () => refetch()}
         />
       </SafeAreaView>
     );
@@ -196,11 +207,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    paddingHorizontal: 20,
   },
   infoRow: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
     gap: 12,
   },
   infoPill: {

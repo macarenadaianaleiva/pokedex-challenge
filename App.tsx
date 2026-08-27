@@ -10,13 +10,14 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        {/* PersistQueryClientProvider hidrata el cache desde AsyncStorage
-            ANTES de pintar los hooks de React Query: si no hay red, la
-            Home muestra la última página/detalle vistos en vez de un
-            loader/error indefinido. */}
+        {/* maxAge: Infinity — el default (24hs) descarta TODO el cache
+            persistido de una si pasó ese tiempo sin abrir la app,
+            incluido el índice de búsqueda pensado para durar offline
+            "para siempre" (ver usePokemonIndex). gcTime en queryClient.ts
+            ya controla la vejez de cada query individual. */}
         <PersistQueryClientProvider
           client={queryClient}
-          persistOptions={{ persister: asyncStoragePersister }}
+          persistOptions={{ persister: asyncStoragePersister, maxAge: Infinity }}
         >
           <NavigationContainer>
             <RootNavigator />

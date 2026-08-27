@@ -43,8 +43,15 @@ export const useFavoritesStore = create<FavoritesState>()(
     {
       name: 'pokedex-favorites',
       storage: createJSONStorage(() => AsyncStorage),
+      // Si falla la lectura de AsyncStorage, zustand llama esto con
+      // `state` undefined; se marca hidratado igual para que
+      // FavoritesScreen no quede esperando para siempre.
       onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+        if (state) {
+          state.setHasHydrated(true);
+        } else {
+          useFavoritesStore.getState().setHasHydrated(true);
+        }
       },
     }
   )
