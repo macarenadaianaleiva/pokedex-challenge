@@ -5,7 +5,7 @@ import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
-import { CARD_ROW_HEIGHT, PokemonCard } from '../components/PokemonCard';
+import { PokemonCard } from '../components/PokemonCard';
 import { PokemonCardSkeleton } from '../components/PokemonCardSkeleton';
 import { SearchBar } from '../components/SearchBar';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
@@ -15,22 +15,11 @@ import type { RootStackParamList } from '../navigation/types';
 import { getArtworkForListItem } from '../utils/pokemon';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
-const NUM_COLUMNS = 2;
 
 interface Row {
   id: number;
   name: string;
   image: string;
-}
-
-// Cada card mide siempre lo mismo (ver PokemonCard: height fijo, nombre
-// a 1 línea), así que se le puede decir a FlatList la posición exacta
-// de cada fila sin que tenga que medirlas dinámicamente — evita el
-// warning de VirtualizedList al renderizar de golpe muchos resultados
-// de búsqueda.
-function getItemLayout(_: unknown, index: number) {
-  const row = Math.floor(index / NUM_COLUMNS);
-  return { length: CARD_ROW_HEIGHT, offset: CARD_ROW_HEIGHT * row, index };
 }
 
 export function HomeScreen() {
@@ -145,8 +134,7 @@ export function HomeScreen() {
       <FlatList
         data={rows}
         keyExtractor={(item) => String(item.id)}
-        numColumns={NUM_COLUMNS}
-        getItemLayout={getItemLayout}
+        numColumns={2}
         contentContainerStyle={styles.listContent}
         renderItem={renderItem}
         onEndReachedThreshold={0.5}
