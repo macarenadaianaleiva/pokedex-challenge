@@ -3,6 +3,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { OfflineBanner } from './src/components/OfflineBanner';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { asyncStoragePersister, queryClient } from './src/lib/queryClient';
 
@@ -19,6 +20,7 @@ export default function App() {
           client={queryClient}
           persistOptions={{ persister: asyncStoragePersister, maxAge: Infinity }}
         >
+          <OfflineBanner />
           <NavigationContainer>
             <RootNavigator />
           </NavigationContainer>
