@@ -22,6 +22,12 @@ interface Row {
   image: string;
 }
 
+// Id que ningún Pokémon real puede tener: marca el item "fantasma" que
+// se agrega cuando la cantidad de resultados es impar, para que la
+// última card no se estire a lo ancho de las dos columnas (ver
+// renderItem más abajo).
+const SPACER_ID = -1;
+
 export function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const [search, setSearch] = useState('');
@@ -59,6 +65,12 @@ export function HomeScreen() {
   }, [isSearching, index.data, debouncedSearch]);
 
   const rows = isSearching ? searchRows : listRows;
+  // Item fantasma al final si la cantidad es impar: sin esto, la
+  // última card (sola en su fila) se estira con flex:1 para ocupar el
+  // ancho de las dos columnas en vez de quedar del mismo tamaño que el resto.
+  const paddedRows = rows.length % 2 !== 0
+    ? [...rows, { id: SPACER_ID, name: '', image: '' }]
+    : rows;
 
   // Memoizados sobre `rows` (no sobre `search`) para que FlatList no
   // re-renderice la grilla visible en cada tecla del buscador.
@@ -68,19 +80,24 @@ export function HomeScreen() {
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: Row }) => (
-      <PokemonCard
-        id={item.id}
-        name={item.name}
-        image={item.image}
-        onPress={() => goToDetail(item)}
-      >
-        <PokemonCard.FavoriteToggle />
-        <PokemonCard.Image />
-        <PokemonCard.Id />
-        <PokemonCard.Name />
-      </PokemonCard>
-    ),
+    ({ item }: { item: Row }) => {
+      if (item.id === SPACER_ID) {
+        return <View style={styles.cardSpacer} />;
+      }
+      return (
+        <PokemonCard
+          id={item.id}
+          name={item.name}
+          image={item.image}
+          onPress={() => goToDetail(item)}
+        >
+          <PokemonCard.FavoriteToggle />
+          <PokemonCard.Image />
+          <PokemonCard.Id />
+          <PokemonCard.Name />
+        </PokemonCard>
+      );
+    },
     [goToDetail]
   );
 
@@ -132,7 +149,7 @@ export function HomeScreen() {
 
     return (
       <FlatList
-        data={rows}
+        data={paddedRows}
         keyExtractor={(item) => String(item.id)}
         numColumns={2}
         contentContainerStyle={styles.listContent}
@@ -177,6 +194,10 @@ const styles = StyleSheet.create({
   },
   footerLoader: {
     marginVertical: 20,
+  },
+  cardSpacer: {
+    flex: 1,
+    margin: 6,
   },
   skeletonGrid: {
     flexDirection: 'row',

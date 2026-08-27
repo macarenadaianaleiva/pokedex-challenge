@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useMemo } from 'react';
-import { FlatList, StyleSheet } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { FavoritePokemon } from '../api/types';
 import { EmptyState } from '../components/EmptyState';
@@ -10,6 +10,11 @@ import type { RootStackParamList } from '../navigation/types';
 import { useFavoritesStore } from '../store/favoritesStore';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+// Id que ningún favorito real puede tener: marca el item "fantasma" que
+// se agrega cuando la cantidad es impar, para que la última card no se
+// estire con flex:1 a lo ancho de las dos columnas.
+const SPACER_ID = -1;
 
 // A diferencia de Home, no usa React Query: lee directo del store de
 // Zustand (persistido en AsyncStorage) — funciona offline sin depender
@@ -23,21 +28,30 @@ export function FavoritesScreen() {
     () => Object.values(favoritesMap).sort((a, b) => a.id - b.id),
     [favoritesMap]
   );
+  // Item fantasma al final si la cantidad es impar (ver comentario en HomeScreen).
+  const paddedFavorites = favorites.length % 2 !== 0
+    ? [...favorites, { id: SPACER_ID, name: '', image: '', types: [] }]
+    : favorites;
 
   const renderItem = useCallback(
-    ({ item }: { item: FavoritePokemon }) => (
-      <PokemonCard
-        id={item.id}
-        name={item.name}
-        image={item.image}
-        onPress={() => navigation.navigate('Detail', { name: item.name })}
-      >
-        <PokemonCard.FavoriteToggle />
-        <PokemonCard.Image />
-        <PokemonCard.Id />
-        <PokemonCard.Name />
-      </PokemonCard>
-    ),
+    ({ item }: { item: FavoritePokemon }) => {
+      if (item.id === SPACER_ID) {
+        return <View style={styles.cardSpacer} />;
+      }
+      return (
+        <PokemonCard
+          id={item.id}
+          name={item.name}
+          image={item.image}
+          onPress={() => navigation.navigate('Detail', { name: item.name })}
+        >
+          <PokemonCard.FavoriteToggle />
+          <PokemonCard.Image />
+          <PokemonCard.Id />
+          <PokemonCard.Name />
+        </PokemonCard>
+      );
+    },
     [navigation]
   );
 
@@ -55,7 +69,7 @@ export function FavoritesScreen() {
         />
       ) : (
         <FlatList
-          data={favorites}
+          data={paddedFavorites}
           keyExtractor={(item) => String(item.id)}
           numColumns={2}
           contentContainerStyle={styles.listContent}
@@ -74,5 +88,9 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 10,
     paddingBottom: 24,
+  },
+  cardSpacer: {
+    flex: 1,
+    margin: 6,
   },
 });
